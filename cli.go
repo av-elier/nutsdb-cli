@@ -27,12 +27,14 @@ func main() {
 		},
 	}
 	app.Action = func(c *cli.Context) error {
-		var db db.DB // NewDB(args.db)
+		impl := db.Db{DbDir: "c:/Users/user/projects/nutsdb-cli/data"}
+		impl.CreateDebugDb()
+		fmt.Println(impl.ListBuckets())
 		comm := comm.Communicator{}
 
-		fmt.Println("hello nutsdb", db, comm)
+		// fmt.Println("hello nutsdb", db, comm)
+		fmt.Println("hello nutsdb")
 		return comm.Run()
-		return nil
 	}
 
 	err := app.Run(os.Args)
