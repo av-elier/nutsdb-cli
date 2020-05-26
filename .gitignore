@@ -1,0 +1,8 @@
+# VSCode
+.vscode*
+
+# NutsDB data files
+**/*.dat
+
+# Build and test stuff
+**/*.exe
