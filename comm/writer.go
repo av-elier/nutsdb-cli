@@ -16,10 +16,16 @@ func (w *Writer) WriteString(s string) (int, error) {
 }
 
 func (w *Writer) WriteStrings(ss []string) (int, error) {
+	written := 0
 	for _, s := range ss {
-		return fmt.Fprintf(w.out, "%s\n", s)
+		l, err := fmt.Fprintf(w.out, "%s\n", s)
+		written += l
+		if err != nil {
+			return written, err
+		}
 	}
-	return fmt.Fprintln(w.out)
+	l, err := fmt.Fprintln(w.out)
+	return written + l, err
 }
 
 func (w *Writer) Error(stage string, err error) (int, error) {

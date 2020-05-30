@@ -3,11 +3,13 @@ package comm
 import (
 	"bufio"
 	"errors"
-	"os"
+	"io"
 	"strings"
 )
 
-type Reader struct{}
+type Reader struct {
+	in io.Reader
+}
 
 type Cmd struct {
 	t      string
@@ -21,7 +23,7 @@ var unknownCommandInputErr = errors.New("unknown command")
 var CmdEnd = Cmd{t: "exit"}
 
 func (r *Reader) Read() (Cmd, error) {
-	s := bufio.NewScanner(os.Stdin)
+	s := bufio.NewScanner(r.in)
 	ok := s.Scan()
 	if !ok {
 		return CmdEnd, nil
@@ -35,16 +37,16 @@ func (r *Reader) Read() (Cmd, error) {
 	res := Cmd{}
 	res.t = spaceSplitted[0]
 	switch res.t {
-	case "get":
-		switch len(spaceSplitted) {
-		case 1:
-			return res, errors.New("get <bucket> [<key>]: bucket is required")
-		case 3:
-			res.bucket = spaceSplitted[1]
-			res.key = strings.Join(spaceSplitted[2:], " ")
-		case 2:
-			res.bucket = spaceSplitted[1]
+	case "list":
+		if len(spaceSplitted) >= 2 {
+			res.bucket = strings.Join(spaceSplitted[1:], " ")
 		}
+	case "get":
+		if len(spaceSplitted) < 3 {
+			return res, errors.New("usage: get <bucket> <key>")
+		}
+		res.bucket = spaceSplitted[1]
+		res.key = strings.Join(spaceSplitted[2:], " ")
 	case "help":
 	case "exit":
 	default:

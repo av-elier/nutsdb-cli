@@ -2,20 +2,25 @@ package comm
 
 import (
 	"errors"
+	"io"
 	"os"
+
+	"github.com/av-elier/nutsdb-cli/db"
 )
 
 type Communicator struct {
 	reader *Reader
 	writer *Writer
+	db     db.DB
 }
 
-func NewCommunicator() *Communicator {
+func NewCommunicator(in io.Reader, db db.DB) *Communicator {
 	return &Communicator{
-		reader: &Reader{},
+		reader: &Reader{in: in},
 		writer: &Writer{
 			out: os.Stdout,
 		},
+		db: db,
 	}
 }
 
@@ -54,12 +59,15 @@ func (comm *Communicator) processCmd(cmd Cmd) error {
 	buckets with space in it, umm... sorry`)
 	case "list":
 		if cmd.bucket == "" {
-			// TODO: use ListBuckets() []string
+			list := comm.db.ListBuckets()
+			comm.writer.WriteStrings(list)
 		} else {
-			// TODO: use ListKeys(bucket string) []string
+			list := comm.db.ListKeys(cmd.bucket)
+			comm.writer.WriteStrings(list)
 		}
 	case "get":
-		// TODO: use Get(bucket, key string) []string
+		value := comm.db.Get(cmd.bucket, cmd.key)
+		comm.writer.WriteString(value)
 	default:
 		comm.writer.Error("process", errors.New("all parsable commands should be supported, developers error"))
 	}

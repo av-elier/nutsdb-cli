@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"path"
 
 	"github.com/av-elier/nutsdb-cli/comm"
 	"github.com/av-elier/nutsdb-cli/db"
@@ -12,6 +15,8 @@ import (
 
 type args struct {
 	db string
+
+	command string
 }
 
 func main() {
@@ -24,7 +29,7 @@ func main() {
 				Usage: "Create debug database 'test.db' in cwd",
 				Action: func(c *cli.Context) error {
 					cwd, _ := os.Getwd()
-					impl := db.Db{DbDir: cwd + "/test.db"}
+					impl := db.NutsDB{DbDir: path.Join(cwd, "test.db")}
 					impl.CreateDebugDb()
 					return nil
 				},
@@ -32,6 +37,11 @@ func main() {
 		},
 	}
 	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:        "command",
+			Usage:       "a command to execute instead of starting repl",
+			Destination: &args.command,
+		},
 		// TODO: make this argument required
 		cli.StringFlag{
 			Name:        "db",
@@ -40,7 +50,13 @@ func main() {
 		},
 	}
 	app.Action = func(c *cli.Context) error {
-		comm := comm.NewCommunicator()
+		cwd, _ := os.Getwd()
+		nuts := db.NutsDB{DbDir: path.Join(cwd, "test.db")}
+		var in io.Reader = os.Stdin
+		if args.command != "" {
+			in = bytes.NewReader([]byte(args.command))
+		}
+		comm := comm.NewCommunicator(in, nuts)
 		fmt.Println("hello nutsdb")
 		return comm.Run()
 	}
