@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/xujiajun/nutsdb"
@@ -92,6 +93,7 @@ func (file Db) ListKeys(bucket string) []string {
 				for _, entry := range entries {
 					keyAsString := string(entry.Key)
 					buckets := append(buckets, keyAsString)
+					fmt.Println(buckets)
 				}
 			}
 			return nil

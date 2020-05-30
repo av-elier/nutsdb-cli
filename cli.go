@@ -40,9 +40,7 @@ func main() {
 		},
 	}
 	app.Action = func(c *cli.Context) error {
-		comm := comm.Communicator{}
-
-		// fmt.Println("hello nutsdb", db, comm)
+		comm := comm.NewCommunicator()
 		fmt.Println("hello nutsdb")
 		return comm.Run()
 	}

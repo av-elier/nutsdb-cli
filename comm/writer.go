@@ -2,20 +2,26 @@ package comm
 
 import (
 	"fmt"
-	"os"
+	"io"
 )
 
-type Writer struct{}
+type Writer struct {
+	out io.Writer
+}
 
 // TODO: function with table formatting?
 
-func (w *Writer) Strings(ss []string) {
-	for _, s := range ss {
-		fmt.Fprintf(os.Stdout, "%s\n", s)
-	}
-	fmt.Fprintln(os.Stdout)
+func (w *Writer) WriteString(s string) (int, error) {
+	return w.out.Write([]byte(s + "\n"))
 }
 
-func (w *Writer) Error(stage string, err error) {
-	fmt.Fprintf(os.Stderr, "error in stage %s: %s\n", stage, err)
+func (w *Writer) WriteStrings(ss []string) (int, error) {
+	for _, s := range ss {
+		return fmt.Fprintf(w.out, "%s\n", s)
+	}
+	return fmt.Fprintln(w.out)
+}
+
+func (w *Writer) Error(stage string, err error) (int, error) {
+	return fmt.Fprintf(w.out, "error in %s: %s\n", stage, err)
 }
