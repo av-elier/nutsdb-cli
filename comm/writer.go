@@ -12,7 +12,7 @@ type Writer struct {
 // TODO: function with table formatting?
 
 func (w *Writer) WriteString(s string) (int, error) {
-	return w.out.Write([]byte(s + "\n"))
+	return w.out.Write([]byte(s + "\n\n"))
 }
 
 func (w *Writer) WriteStrings(ss []string) (int, error) {
@@ -24,10 +24,10 @@ func (w *Writer) WriteStrings(ss []string) (int, error) {
 			return written, err
 		}
 	}
-	l, err := fmt.Fprintln(w.out)
+	l, err := fmt.Fprint(w.out, "\n")
 	return written + l, err
 }
 
 func (w *Writer) Error(stage string, err error) (int, error) {
-	return fmt.Fprintf(w.out, "error in %s: %s\n", stage, err)
+	return fmt.Fprintf(w.out, "error in %s: %s\n\n", stage, err)
 }
