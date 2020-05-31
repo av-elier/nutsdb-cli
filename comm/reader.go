@@ -22,6 +22,8 @@ var unknownCommandInputErr = errors.New("unknown command")
 
 var CmdEnd = Cmd{t: "exit"}
 
+// TODO: Support buckets with space in it
+
 func (r *Reader) Read() (Cmd, error) {
 	s := bufio.NewScanner(r.in)
 	ok := s.Scan()
@@ -36,6 +38,7 @@ func (r *Reader) Read() (Cmd, error) {
 	}
 	res := Cmd{}
 	res.t = spaceSplitted[0]
+
 	switch res.t {
 	case "list":
 		if len(spaceSplitted) >= 2 {

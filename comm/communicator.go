@@ -26,7 +26,11 @@ func NewCommunicator(in io.Reader, db db.DB) *Communicator {
 
 func (comm *Communicator) Run() error {
 	for {
+		comm.writer.WritePromt()
 		cmd, err := comm.reader.Read()
+		if err == emptyInputErr {
+			continue
+		}
 		if err != nil {
 			comm.writer.Error("read", err)
 			continue
