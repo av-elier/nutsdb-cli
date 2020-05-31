@@ -26,6 +26,9 @@ func (nuts NutsDB) CreateDebugDb() {
 	}{
 		{[]byte("k1"), []byte("umbrella")},
 		{[]byte("k2"), []byte("budger")},
+		{[]byte("k3"), []byte("some text value with spaces")},
+		{[]byte("k4"), []byte("some text value with spaces and \nnew \nlines")},
+		{[]byte("key with spaces"), []byte("3.1415926")},
 	}
 
 	if err := db.Update(
@@ -85,12 +88,10 @@ func (nuts NutsDB) ListKeys(bucket string) []string {
 			for _, entry := range entries {
 				keyAsString := string(entry.Key)
 				keys = append(keys, keyAsString)
-				log.Println(keys)
 			}
 		}
 		return nil
 	})
-	log.Println(keys)
 	if err != nil {
 		log.Println(err)
 	}

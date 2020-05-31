@@ -20,6 +20,7 @@ func (w *Writer) WritePromt() (int, error) {
 }
 
 func (w *Writer) WriteStrings(ss []string) (int, error) {
+	// TODO make WriteStrings which allows to see trailing spaces
 	written := 0
 	var err error = nil
 	for _, s := range ss {
