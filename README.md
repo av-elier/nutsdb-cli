@@ -11,15 +11,4 @@ go install github.com/av-elier/nutsdb-cli
 
 # Usage
 
-```shell
-~ nutsdb-cli --db test.db
-list
-bucket1
-
-list bucket1
-k1
-k2
-
-get bucket1 k1
-umbrella
-```
+![](./readme_resources/present.gif)

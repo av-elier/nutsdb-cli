@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -50,9 +51,9 @@ func main() {
 		Action: func(c *cli.Context) error {
 			cwd, _ := os.Getwd()
 			nuts := db.NutsDB{DbDir: path.Join(cwd, args.db)}
-			var in io.Reader = os.Stdin
+			var in io.ReadCloser = os.Stdin
 			if args.command != "" {
-				in = bytes.NewReader([]byte(args.command))
+				in = ioutil.NopCloser(bytes.NewReader([]byte(args.command)))
 			}
 			comm := comm.NewCommunicator(in, nuts)
 			return comm.Run()

@@ -1,79 +1,90 @@
 package comm
 
 import (
-	"errors"
 	"io"
-	"os"
 
+	"github.com/abiosoft/ishell"
+	"github.com/abiosoft/readline"
 	"github.com/av-elier/nutsdb-cli/db"
 )
 
 type Communicator struct {
-	reader *Reader
-	writer *Writer
 	db     db.DB
+	reader *Reader
+	shell  *ishell.Shell
 }
 
-func NewCommunicator(in io.Reader, db db.DB) *Communicator {
-	return &Communicator{
-		reader: &Reader{in: in},
-		writer: &Writer{
-			out: os.Stdout,
-		},
-		db: db,
+func NewCommunicator(in io.ReadCloser, db db.DB) *Communicator {
+	comm := &Communicator{
+		db:     db,
+		reader: &Reader{},
+		shell: ishell.NewWithConfig(&readline.Config{
+			Prompt: "> ",
+			Stdin:  in,
+		}),
 	}
+	comm.shell.EOF(func(c *ishell.Context) {
+		comm.shell.Stop()
+	})
+	comm.shell.SetHomeHistoryPath(".nutsdb_cli_history")
+
+	comm.shell.AddCmd(&ishell.Cmd{
+		Name: "list",
+		Help: "`list`: list buckets, or `list <bucket>`: list bucket keys",
+		Completer: func(args []string) []string {
+			if len(args) != 0 {
+				return nil
+			}
+			return comm.db.ListBuckets()
+		},
+		Func: func(c *ishell.Context) {
+			nutsCmd, err := comm.reader.Read(c.Cmd.Name, c.Args)
+			if err != nil {
+				c.Err(err)
+				return
+			}
+			if nutsCmd.bucket == "" {
+				list := comm.db.ListBuckets()
+				comm.printLines(list)
+			} else {
+				list := comm.db.ListKeys(nutsCmd.bucket)
+				comm.printLines(list)
+			}
+		},
+	})
+	comm.shell.AddCmd(&ishell.Cmd{
+		Name: "get",
+		Help: "get <bucket> <key>: show value of given key",
+		Completer: func(args []string) []string {
+			if len(args) == 0 {
+				return comm.db.ListBuckets()
+			}
+			if len(args) == 1 {
+				return comm.db.ListKeys(args[0])
+			}
+			return nil
+		},
+		Func: func(c *ishell.Context) {
+			nutsCmd, err := comm.reader.Read(c.Cmd.Name, c.Args)
+			if err != nil {
+				c.Err(err)
+				return
+			}
+			value := comm.db.Get(nutsCmd.bucket, nutsCmd.key)
+			comm.shell.Println(value)
+
+		},
+	})
+	return comm
 }
 
 func (comm *Communicator) Run() error {
-	for {
-		comm.writer.WritePromt()
-		cmd, err := comm.reader.Read()
-		if err == emptyInputErr {
-			continue
-		}
-		if err != nil {
-			comm.writer.Error("read", err)
-			continue
-		}
-		if cmd.t == "exit" { // the only flow control cmd
-			return nil
-		}
-		err = comm.processCmd(cmd)
-		if err != nil {
-			comm.writer.Error("process", err)
-		}
-	}
+	comm.shell.Run()
+	return nil
 }
 
-func (comm *Communicator) processCmd(cmd Cmd) error {
-	switch cmd.t {
-	case "help":
-		comm.writer.WriteString(`available commands:
-	help
-		display this message
-	list
-		list buckets
-	list <bucket>
-		list bucket keys
-	get <bucket> <key>
-		show value of given key
-	exit
-		exit
-
-	buckets with space in it, umm... sorry`)
-	case "list":
-		if cmd.bucket == "" {
-			list := comm.db.ListBuckets()
-			comm.writer.WriteStrings(list)
-		} else {
-			list := comm.db.ListKeys(cmd.bucket)
-			comm.writer.WriteStrings(list)
-		}
-	case "get":
-		value := comm.db.Get(cmd.bucket, cmd.key)
-		comm.writer.WriteString(value)
-	default:
-		comm.writer.Error("process", errors.New("all parsable commands should be supported, developers error"))
+func (comm *Communicator) printLines(lines []string) {
+	for _, l := range lines {
+		comm.shell.Println(l)
 	}
-	return nil
 }
