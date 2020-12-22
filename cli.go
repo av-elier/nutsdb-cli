@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 
 	"github.com/av-elier/nutsdb-cli/comm"
 	"github.com/av-elier/nutsdb-cli/db"
@@ -31,7 +30,7 @@ func main() {
 			},
 			cli.StringFlag{
 				Name:        "db",
-				Usage:       "path to nutsdb batabase",
+				Usage:       "path to nutsdb database",
 				Destination: &args.db,
 				Required:    true,
 			},
@@ -39,18 +38,16 @@ func main() {
 		Commands: []cli.Command{
 			{
 				Name:  "debug",
-				Usage: "Create debug database 'test.db' in cwd",
+				Usage: "Insert sample data into the specified database",
 				Action: func(c *cli.Context) error {
-					cwd, _ := os.Getwd()
-					impl := db.NutsDB{DbDir: path.Join(cwd, args.db)}
+					impl := db.NutsDB{DbDir: args.db}
 					impl.CreateDebugDb()
 					return nil
 				},
 			},
 		},
 		Action: func(c *cli.Context) error {
-			cwd, _ := os.Getwd()
-			nuts := db.NutsDB{DbDir: path.Join(cwd, args.db)}
+			nuts := db.NutsDB{DbDir: args.db}
 			var in io.ReadCloser = os.Stdin
 			if args.command != "" {
 				in = ioutil.NopCloser(bytes.NewReader([]byte(args.command)))
