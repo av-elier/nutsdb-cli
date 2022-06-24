@@ -2,6 +2,7 @@ package db
 
 import (
 	"log"
+	"fmt"
 
 	"github.com/xujiajun/nutsdb"
 )
@@ -81,7 +82,7 @@ func (nuts NutsDB) ListKeys(bucket string) []string {
 		// Constrain 100 entries returned
 		// bucketBin := []byte(bucket)
 		limit := 1000 // TODO
-		if entries, err := tx.PrefixScan(bucket, prefix, limit); err != nil {
+		if entries, _, err := tx.PrefixScan(bucket, prefix, 0, limit); err != nil {
 			log.Println("Error occured while scanning for keys", err)
 			return nil
 		} else {
@@ -114,6 +115,52 @@ func (nuts NutsDB) Get(bucket, key string) string {
 			return err
 		}
 		res = string(entry.Value)
+		return nil
+	})
+	return res
+}
+
+func (nuts NutsDB) PrefixScan(bucket, prefix string, offset, limit int) []string {
+	opt := nutsdb.DefaultOptions
+	opt.Dir = nuts.DbDir
+	db, err := nutsdb.Open(opt)
+	defer db.Close()
+	if err != nil {
+		return []string{}
+	}
+	var res []string
+	err = db.View(func(tx *nutsdb.Tx) error {
+		if entries,_, err := tx.PrefixScan(bucket, []byte(prefix), offset, limit); err != nil {
+			fmt.Println("ERROR while searching: " + err.Error())
+			return err
+		} else {
+			for _, entry := range entries {
+				res = append(res, string(entry.Key))
+			}
+		}
+		return nil
+	})
+	return res
+}
+
+func (nuts NutsDB) PrefixSearchScan(bucket, regex string, offset, limit int) []string {
+	opt := nutsdb.DefaultOptions
+	opt.Dir = nuts.DbDir
+	db, err := nutsdb.Open(opt)
+	defer db.Close()
+	if err != nil {
+		return []string{}
+	}
+	var res []string
+	err = db.View(func(tx *nutsdb.Tx) error {
+		if entries,_, err := tx.PrefixSearchScan(bucket, []byte(""), regex, offset, limit); err != nil {
+			fmt.Println("ERROR while searching: " + err.Error())
+			return err
+		} else {
+			for _, entry := range entries {
+				res = append(res, string(entry.Key))
+			}
+		}
 		return nil
 	})
 	return res
