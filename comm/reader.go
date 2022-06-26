@@ -27,13 +27,13 @@ func (r *Reader) Read(t string, args []string) (Cmd, error) {
 			res.bucket = strings.Join(args, " ")
 		}
 	case "prefix":
-		if len(args) < 2 {
+		if len(args) < 1 {
 			return res, errors.New("usage: prefix <bucket> <prefix>, bucket and/or prefix not specified")
 		}
 		res.bucket = args[0]
 		res.prefix = strings.Join(args[1:], " ")
 	case "regex":
-		if len(args) < 2 {
+		if len(args) < 1 {
 			return res, errors.New("usage: regex <bucket> <regex>, bucket and/or regex not specified")
 		}
 		res.bucket = args[0]

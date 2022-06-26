@@ -2,6 +2,7 @@ package comm
 
 import (
 	"io"
+	"strings"
 
 	"github.com/abiosoft/ishell"
 	"github.com/abiosoft/readline"
@@ -83,7 +84,10 @@ func NewCommunicator(in io.ReadCloser, db db.DB) *Communicator {
 				return comm.db.ListBuckets()
 			}
 			if len(args) == 1 {
-				return comm.db.PrefixScan(args[0], args[1], 0, 100)
+				return comm.db.ListKeys(args[0])
+			}
+			if len(args) > 1 {
+				return comm.db.PrefixScan(args[0], strings.Join(args[1:], ""), 0, 100)
 			}
 			return nil
 		},
@@ -105,7 +109,10 @@ func NewCommunicator(in io.ReadCloser, db db.DB) *Communicator {
 				return comm.db.ListBuckets()
 			}
 			if len(args) == 1 {
-				return comm.db.PrefixSearchScan(args[0], args[1], 0, 100)
+				return comm.db.ListKeys(args[0])
+			}
+			if len(args) > 1 {
+				return comm.db.PrefixSearchScan(args[0], strings.Join(args[1:], ""), 0, 100)
 			}
 			return nil
 		},
