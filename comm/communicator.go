@@ -2,6 +2,7 @@ package comm
 
 import (
 	"io"
+	"strings"
 
 	"github.com/abiosoft/ishell"
 	"github.com/abiosoft/readline"
@@ -73,6 +74,56 @@ func NewCommunicator(in io.ReadCloser, db db.DB) *Communicator {
 			value := comm.db.Get(nutsCmd.bucket, nutsCmd.key)
 			comm.shell.Println(value)
 
+		},
+	})
+	comm.shell.AddCmd(&ishell.Cmd{
+		Name: "prefix",
+		Help: "prefix <bucket> <prefix>: show list of keys with given prefix",
+		Completer: func(args []string) []string {
+			if len(args) == 0 {
+				return comm.db.ListBuckets()
+			}
+			if len(args) == 1 {
+				return comm.db.ListKeys(args[0])
+			}
+			if len(args) > 1 {
+				return comm.db.PrefixScan(args[0], strings.Join(args[1:], ""), 0, 100)
+			}
+			return nil
+		},
+		Func: func(c *ishell.Context) {
+			nutsCmd, err := comm.reader.Read(c.Cmd.Name, c.Args)
+			if err != nil {
+				c.Err(err)
+				return
+			}
+			value := comm.db.PrefixScan(nutsCmd.bucket, nutsCmd.prefix, 0, 100)
+			comm.printLines(value)
+		},
+	})
+	comm.shell.AddCmd(&ishell.Cmd{
+		Name: "regex",
+		Help: "regex <bucket> <regex>: show list of keys matching given regex",
+		Completer: func(args []string) []string {
+			if len(args) == 0 {
+				return comm.db.ListBuckets()
+			}
+			if len(args) == 1 {
+				return comm.db.ListKeys(args[0])
+			}
+			if len(args) > 1 {
+				return comm.db.PrefixSearchScan(args[0], strings.Join(args[1:], ""), 0, 100)
+			}
+			return nil
+		},
+		Func: func(c *ishell.Context) {
+			nutsCmd, err := comm.reader.Read(c.Cmd.Name, c.Args)
+			if err != nil {
+				c.Err(err)
+				return
+			}
+			value := comm.db.PrefixSearchScan(nutsCmd.bucket, nutsCmd.regex, 0, 100)
+			comm.printLines(value)
 		},
 	})
 	return comm
